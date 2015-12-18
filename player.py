@@ -13,19 +13,19 @@ def movement(movement_speed):
 
     # forward
     if keyboard.events[events.WKEY] == ACTIVE:
-        movement[1] = movement_speed
+        movement[1] = utils.clamp(movement[1] + movement_speed*.1, -movement_speed, movement_speed)
         
     # backward
     if keyboard.events[events.SKEY] == ACTIVE:
-        movement[1] = -movement_speed
+        movement[1] = utils.clamp(movement[1] + -movement_speed*.1, -movement_speed, movement_speed)
     
     # left
     if keyboard.events[events.AKEY] == ACTIVE:
-        movement[0] = -movement_speed
+        movement[0] = utils.clamp(movement[0] + -movement_speed*.1, -movement_speed, movement_speed)
         
     # right
     if keyboard.events[events.DKEY] == ACTIVE:
-        movement[0] = movement_speed
+        movement[0] = utils.clamp(movement[0] + movement_speed*.1, -movement_speed, movement_speed)
             
     own.setLinearVelocity(movement)
             
