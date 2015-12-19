@@ -3,6 +3,8 @@ Lonely Photon
 Music:
 	menu/intro:
 		infinite perspective
+		relaxing piano music
+		music for manatees
 	level 1:
 
 
