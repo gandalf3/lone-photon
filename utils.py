@@ -7,3 +7,10 @@ def velocity2speed(velocity):
     for i in velocity:
         speed += abs(i)
     return speed
+
+def distance(point1, point2):
+    """
+    Distance on the X/Y plane between two points
+    """
+    
+    return sqrt((point1.x - point2.x)**2 + (point1.y - point2.y))
