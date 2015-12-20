@@ -8,9 +8,11 @@ import utils
 import aud
 
 sound = aud.Factory.file(logic.expandPath("//sound/Adventure Meme.mp3")).volume(.1).loop(-1)
-music = aud.device().play(sound)
+#music = aud.device().play(sound)
 
 scene = logic.getCurrentScene()
+
+
 
 def movement(movement_speed):
     cont = logic.getCurrentController()

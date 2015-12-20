@@ -1,10 +1,11 @@
 from bge import logic
+from main import Sentry
 import random
 import math
 import aud
 import utils
 
-laser_sound = aud.Factory.file(logic.expandPath("//sound/laser/laserfire01.ogg")).volume(.5)
+laser_sound = aud.Factory.file(logic.expandPath("//sound/laser/laserfire01.ogg")).volume(.5).fadeout(0, .4)
 
 
 def search():
@@ -42,3 +43,13 @@ def fire(direction):
     projectile["sound_handler"] = aud.device().play(laser_sound)
     if projectile.get("sound_handler", 0):
         projectile["sound_handler"].pitch = logic.getTimeScale()
+
+def main(cont):
+    own = cont.owner
+    
+    if not "init" in own:
+        own["init"] = True
+        print("setup")
+        own = Sentry(own)
+    
+    own.main()
