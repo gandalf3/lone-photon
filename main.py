@@ -1,4 +1,6 @@
 from bge import logic, types
+import aud
+import random
 import utils
 
 class Sentry(types.KX_GameObject):
@@ -21,6 +23,15 @@ class Sentry(types.KX_GameObject):
         
         self.firenow = 0
         
+        self.mparts = []
+        
+        for child in self.children:
+            if "firepoint" in child.name:
+                self.firepoint = child
+            if "mpart" in child.name:
+                self.mparts.append(child)
+            
+        
         
         
     def aim(self):
@@ -32,40 +43,58 @@ class Sentry(types.KX_GameObject):
         else:
             self["cansee"] = False
             
-        return 
+        return self["cansee"]
             
             
         
     def fire(self):
         
-        print("pow")
-        projectile = self.scene.addObject(self.projectile_type, self, 0)
+        projectile = self.scene.addObject(self.projectile_type, self.firepoint, 0)
         projectile.worldOrientation = self.worldOrientation
-        projectile.setLinearVelocity((-20, 0, 0), True)
+        
+        for part in self.mparts:
+            part.playAction(name="sentry", start_frame=1, end_frame=4)
         
         self.firenow = 0
         
         
         
     def main(self):
-        self.aim()
-        
-        print(self.firenow*logic.getTimeScale())
-        if self.firenow*logic.getTimeScale() >= 1:
+        aim = self.aim()
+     
+        if self.firenow > 1 and aim:
             self.fire()
 
-        self.firenow += 1*self.fireRate
-        
+        self.firenow += 1*self.fireRate*logic.getTimeScale()
+
         
         
 class Projectile(types.KX_GameObject):
     
-    light_source = "standard_projectile_lamp"
     
-    def __init__(self, own):
-        self.cont = self.controllers[0]
+    def __init__(self, own, sound):
         
-        self.light = self.scene.addObject(light_source)
-        self.light.setParent(self,0,0)
+        self.sound = sound
+
+        self.speed = -30
+        self.homing_factor = 0
         
+        self.light_source = "standard_projectile_lamp"        
+        
+#        self.light = self.scene.addObject(self.light_source)
+        
+        self.sound_handler = aud.device().play(self.sound)
+#        self.setLinearVelocity((self.speed, 0, 0), True)
+        
+    def main(self):
+
+        self.setLinearVelocity((self.speed, 0, 0), True)
+        
+        #self.light.worldPosition = self.worldPosition
+
+        print(utils.map_range(logic.getTimeScale() + utils.map_range(random.random(), to_min=-.1, to_max=.1), .05, 1, .2, 1))
+        if self.sound_handler:
+
+            self.sound_handler.pitch = utils.map_range(logic.getTimeScale() + utils.map_range(random.random(), to_min=-.1, to_max=.1), .05, 1, .2, 1)
+            print(self.sound_handler.pitch)
         
