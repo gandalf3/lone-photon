@@ -203,6 +203,7 @@ class Player(types.KX_GameObject):
         if keyboard.events[events.DKEY] == ACTIVE:
             movement[0] = utils.clamp(movement[0] + self.movement_speed*.1, -self.movement_speed, self.movement_speed)
                 
+        #self.setLinearVelocity(movement * ((logic.getTimeScale()-1)**4+1))
         self.setLinearVelocity(movement)
         
         # cosmetic spinny stuff
@@ -214,7 +215,7 @@ class Player(types.KX_GameObject):
         if self.alive:
             velocity = self.getLinearVelocity()
             speed = utils.velocity2speed(velocity)
-            timescale = utils.clamp((speed/self.movement_speed)**3, .05, 1)
+            timescale = utils.clamp((speed/self.movement_speed)**2, .05, 1)
             
             if timescale != logic.getTimeScale():
                 logic.setTimeScale(timescale)
