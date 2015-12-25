@@ -1,6 +1,6 @@
 import bge
 from main import nextlevel
-player = bge.logic.globalDict['player']
+player = bge.logic.getCurrentScene().objects["player"]
 
 def check_collision(object):
     if object == player:

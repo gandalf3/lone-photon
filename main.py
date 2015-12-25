@@ -11,14 +11,8 @@ sound = aud.Factory.file(logic.expandPath("//sound/Destiny Day.mp3")).volume(1).
 music = aud.device().play(sound)
 
 dict = logic.globalDict
+playername = "player"
 scene = logic.getCurrentScene()
-print(logic.getSceneList())
-for s in logic.getSceneList():
-    print(s.name)
-    if s.name == "level1":
-        scene = s
-    if s.name == "props":
-        prop_scene = s
 
 levels = ['level1', 'level2']
 dict["current_level"] = 0
@@ -28,7 +22,7 @@ class Sentry(types.KX_GameObject):
     def __init__(self, own):
         self.cont = self.controllers[0]
         
-        self.target = dict['player']
+        self.target = logic.getCurrentScene().objects[playername]
         
         self.fireRate = .1
         self.range = 8
@@ -68,7 +62,7 @@ class Sentry(types.KX_GameObject):
         
     def fire(self):
         
-        projectile = scene.addObject(self.projectile_type, self.firepoint, 0)
+        projectile = logic.getCurrentScene().addObject(self.projectile_type, self.firepoint, 0)
         projectile.worldOrientation = self.worldOrientation
         
         for part in self.mparts:
@@ -91,6 +85,7 @@ class Sentry(types.KX_GameObject):
 class Projectile(types.KX_GameObject):
     
     def __init__(self, own, sound):
+        player = logic.getCurrentScene().objects[playername]
         
         self.sound = sound
 
@@ -101,8 +96,8 @@ class Projectile(types.KX_GameObject):
         
         self.sound_device = aud.device()
         self.sound_device.distance_model = aud.AUD_DISTANCE_MODEL_LINEAR
-        self.sound_device.listener_location = dict['player'].worldPosition
-        self.sound_device.listener_velocity = dict['player'].getLinearVelocity()
+        self.sound_device.listener_location = player.worldPosition
+        self.sound_device.listener_velocity = player.getLinearVelocity()
         self.sound_device.doppler_factor = 3
         
         self.sound_handle = self.sound_device.play(self.sound)
@@ -130,15 +125,15 @@ class Projectile(types.KX_GameObject):
             # determine reflection direction
             r = d - ((2 * d * n) / (n*n)) * n
                         
-            vectsplosion = scene.addObject("vectsplosion")
+            vectsplosion = logic.getCurrentScene().addObject("vectsplosion")
             vectsplosion["point"] = point
             vectsplosion["direction"] = r
             vectsplosion["color"] = (1, 0, 0)
             
-        if object == dict['player']:
-            player_death()
-        else:
-            self.endObject()
+            if object == logic.getCurrentScene().objects[playername]:
+                player_death()
+            else:
+                self.endObject()
             
         
     def main(self):
@@ -182,7 +177,7 @@ class Player(types.KX_GameObject):
         self.alive = True
         self.recouperating = False
         self.movement_speed = 20
-        self.light = scene.objects["player_light"]
+        self.light = logic.getCurrentScene().objects["player_light"]
 
         self.counter = 1
         
@@ -212,14 +207,14 @@ class Player(types.KX_GameObject):
         
         # cosmetic spinny stuff
         if self.getAngularVelocity() < mathutils.Vector((1,1,1)):
-            self.setAngularVelocity(((random.random()*5)-2.5, (random.random()*5)-2.5, (random.random()*5)-2.5))
+            self.setAngularVelocity(numpy.random.normal(0, 5, 3))
             
     def main(self):
         
         if self.alive:
             velocity = self.getLinearVelocity()
             speed = utils.velocity2speed(velocity)
-            timescale = utils.clamp(speed/self.movement_speed, .05, 1)
+            timescale = utils.clamp((speed/self.movement_speed)**3, .05, 1)
             
             if timescale != logic.getTimeScale():
                 logic.setTimeScale(timescale)
@@ -254,12 +249,7 @@ class Player(types.KX_GameObject):
             
         
         #light_trail.main(cont)
-        
-def update_camera(cont):
-    own = cont.owner
-    own.worldPosition.x += (dict['player'].worldPosition.x - own.worldPosition.x) * .1
-    own.worldPosition.y += (dict['player'].worldPosition.y - own.worldPosition.y) * .1
-    
+
 def nextlevel():
     dict["current_level"] += 1
     lvl = dict["current_level"]
@@ -269,7 +259,7 @@ def nextlevel():
     
 def player_death():
     logic.setTimeScale(.03)
-    dict['player'].alive = False
+    logic.getCurrentScene().objects[playername].alive = False
     
 #def main():
     
