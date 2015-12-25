@@ -3,6 +3,16 @@ import collections
 import mathutils
 import utils
 
+
+
+class LightTrail(types.KX_GameObject):
+    
+    def __init__(self, own):
+        self.length = 20
+        self.resolution = 20
+
+
+
 tail_length=20
 past_locations = collections.deque(maxlen=20)
 for i in range(tail_length):

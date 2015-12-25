@@ -1,15 +1,34 @@
-from bge import logic, types
+from bge import logic, events, types, render
+import math, mathutils
+import numpy
 import aud
 import random
 import utils
+
+#sound = aud.Factory.file(logic.expandPath("//sound/Adventure Meme.mp3")).volume(.1).loop(-1)
+#sound = aud.Factory.file(logic.expandPath("//sound/Unwritten Return.mp3")).volume(1).loop(-1)
+sound = aud.Factory.file(logic.expandPath("//sound/Destiny Day.mp3")).volume(1).loop(-1)
+music = aud.device().play(sound)
+
+dict = logic.globalDict
+scene = logic.getCurrentScene()
+print(logic.getSceneList())
+for s in logic.getSceneList():
+    print(s.name)
+    if s.name == "level1":
+        scene = s
+    if s.name == "props":
+        prop_scene = s
+
+levels = ['level1', 'level2']
+dict["current_level"] = 0
 
 class Sentry(types.KX_GameObject):
     
     def __init__(self, own):
         self.cont = self.controllers[0]
-#        scene = logic.getCurrentScene()
         
-        self.target = self.scene.objects["player"]
+        self.target = dict['player']
         
         self.fireRate = .1
         self.range = 8
@@ -21,7 +40,7 @@ class Sentry(types.KX_GameObject):
             
         print(self.name, "using", self.projectile_type)
         
-        self.firenow = 0
+        self.firenow = random.random()
         
         self.mparts = []
         
@@ -35,7 +54,7 @@ class Sentry(types.KX_GameObject):
         
         
     def aim(self):
-        
+
         hit = self.rayCast(self.target, self, 0.0, "solid", 0, 1, 0)
         if hit[0] == self.target:
             self["cansee"] = True
@@ -49,7 +68,7 @@ class Sentry(types.KX_GameObject):
         
     def fire(self):
         
-        projectile = self.scene.addObject(self.projectile_type, self.firepoint, 0)
+        projectile = scene.addObject(self.projectile_type, self.firepoint, 0)
         projectile.worldOrientation = self.worldOrientation
         
         for part in self.mparts:
@@ -71,7 +90,6 @@ class Sentry(types.KX_GameObject):
         
 class Projectile(types.KX_GameObject):
     
-    
     def __init__(self, own, sound):
         
         self.sound = sound
@@ -79,22 +97,179 @@ class Projectile(types.KX_GameObject):
         self.speed = -30
         self.homing_factor = 0
         
-        self.light_source = "standard_projectile_lamp"        
+        self.collisionCallbacks.append(self.on_collision)
         
-#        self.light = self.scene.addObject(self.light_source)
+        self.sound_device = aud.device()
+        self.sound_device.distance_model = aud.AUD_DISTANCE_MODEL_LINEAR
+        self.sound_device.listener_location = dict['player'].worldPosition
+        self.sound_device.listener_velocity = dict['player'].getLinearVelocity()
+        self.sound_device.doppler_factor = 3
         
-        self.sound_handler = aud.device().play(self.sound)
-#        self.setLinearVelocity((self.speed, 0, 0), True)
+        self.sound_handle = self.sound_device.play(self.sound)
+        self.sound_handle.relative = False
+        self.sound_handle.location = self.worldPosition
+        self.sound_handle.velocity = self.getLinearVelocity()
+        self.sound_handle.distance_maximum = 100
+        self.sound_handle.distance_reference = 1
+        
+        
+    def on_collision(self, object, point, normal):
+            
+        if "solid" in object:
+        
+            # Flip sign of normal if collision with triangle mesh
+            # to workaround this bug: https://developer.blender.org/T47036
+            if "floor_triangle_mesh" in object.name:
+                normal = normal*-1
+                
+            d = mathutils.Vector(self.getLinearVelocity())
+            n = mathutils.Vector(normal)
+            
+#            d = d * d.dot(n)
+            
+            # determine reflection direction
+            r = d - ((2 * d * n) / (n*n)) * n
+                        
+            vectsplosion = scene.addObject("vectsplosion")
+            vectsplosion["point"] = point
+            vectsplosion["direction"] = r
+            vectsplosion["color"] = (1, 0, 0)
+            
+        if object == dict['player']:
+            player_death()
+        else:
+            self.endObject()
+            
         
     def main(self):
-
+        
         self.setLinearVelocity((self.speed, 0, 0), True)
-        
-        #self.light.worldPosition = self.worldPosition
 
-        print(utils.map_range(logic.getTimeScale() + utils.map_range(random.random(), to_min=-.1, to_max=.1), .05, 1, .2, 1))
-        if self.sound_handler:
+        if self.sound_handle:
+            self.sound_handle.pitch = utils.map_range(logic.getTimeScale() + utils.map_range(random.random(), to_min=-.1, to_max=.1), .05, 1, .2, 1)
 
-            self.sound_handler.pitch = utils.map_range(logic.getTimeScale() + utils.map_range(random.random(), to_min=-.1, to_max=.1), .05, 1, .2, 1)
-            print(self.sound_handler.pitch)
+class Vectsplosion(types.KX_GameObject):
+    
+    def __init__(self, own):
         
+        self.origin = mathutils.Vector(self["point"])
+        self.direction = mathutils.Vector(self["direction"])
+        self.rcolor = self["color"]
+
+        self.time = 0
+        self.lines = []
+
+        for i in range(random.randrange(3, 5)):
+            self.lines.append(self.origin + self.direction + mathutils.Vector(numpy.random.normal(0, 5, 3)))
+        
+    def main(self):
+        
+        for line in self.lines:
+            render.drawLine(self.origin.lerp(line, utils.clamp(self.time*2-.5)), self.origin.lerp(line, self.time), self.rcolor)
+            
+        self.time += .1*logic.getTimeScale()
+
+        if self.time >= 1:
+            self.endObject()
+        
+
+class Player(types.KX_GameObject):
+    
+    keyboard = logic.keyboard
+    
+    def __init__(self, own):
+        
+        self.alive = True
+        self.recouperating = False
+        self.movement_speed = 20
+        self.light = scene.objects["player_light"]
+
+        self.counter = 1
+        
+        
+    def movement(self, keyboard=keyboard):
+        ACTIVE = logic.KX_INPUT_ACTIVE
+    
+        movement = self.getLinearVelocity()
+
+        # forward
+        if keyboard.events[events.WKEY] == ACTIVE:
+            movement[1] = utils.clamp(movement[1] + self.movement_speed*.1, -self.movement_speed, self.movement_speed)
+            
+        # backward
+        if keyboard.events[events.SKEY] == ACTIVE:
+            movement[1] = utils.clamp(movement[1] + -self.movement_speed*.1, -self.movement_speed, self.movement_speed)
+        
+        # left
+        if keyboard.events[events.AKEY] == ACTIVE:
+            movement[0] = utils.clamp(movement[0] + -self.movement_speed*.1, -self.movement_speed, self.movement_speed)
+            
+        # right
+        if keyboard.events[events.DKEY] == ACTIVE:
+            movement[0] = utils.clamp(movement[0] + self.movement_speed*.1, -self.movement_speed, self.movement_speed)
+                
+        self.setLinearVelocity(movement)
+        
+        # cosmetic spinny stuff
+        if self.getAngularVelocity() < mathutils.Vector((1,1,1)):
+            self.setAngularVelocity(((random.random()*5)-2.5, (random.random()*5)-2.5, (random.random()*5)-2.5))
+            
+    def main(self):
+        
+        if self.alive:
+            velocity = self.getLinearVelocity()
+            speed = utils.velocity2speed(velocity)
+            timescale = utils.clamp(speed/self.movement_speed, .05, 1)
+            
+            if timescale != logic.getTimeScale():
+                logic.setTimeScale(timescale)
+                
+            self.light.energy = (math.sin(logic.getRealTime())*.3) + .7
+
+            self.movement()
+        else:
+            
+            self.light.energy = self.light.energy * utils.clamp(float(self.counter), .5, 1)
+            music.pitch = utils.clamp(self.counter)
+            
+            self.counter -= .01
+            
+        if self.alive == False and self.counter < 0:
+            logic.sendMessage("player_death")
+            
+            self.alive = True
+            self.recouperating = True
+            
+        if self.recouperating and self.alive == True:
+           
+            self.light.energy = ((math.sin(logic.getRealTime())*.3) + .7) * self.counter
+            music.pitch = utils.clamp(self.counter)
+            
+            self.counter += .05
+            
+            if self.counter >= 1:
+                self.recouperating = False
+                music.pitch = 1
+        
+            
+        
+        #light_trail.main(cont)
+        
+def update_camera(cont):
+    own = cont.owner
+    own.worldPosition.x += (dict['player'].worldPosition.x - own.worldPosition.x) * .1
+    own.worldPosition.y += (dict['player'].worldPosition.y - own.worldPosition.y) * .1
+    
+def nextlevel():
+    dict["current_level"] += 1
+    lvl = dict["current_level"]
+    print("going to level", lvl)
+    
+    logic.getCurrentScene().replace(levels[lvl])
+    
+def player_death():
+    logic.setTimeScale(.03)
+    dict['player'].alive = False
+    
+#def main():
+    
