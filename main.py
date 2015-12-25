@@ -25,7 +25,7 @@ class Sentry(types.KX_GameObject):
         self.target = logic.getCurrentScene().objects[playername]
         
         self.fireRate = .1
-        self.range = 8
+        self.range = 20
         
         if not self.get("projectile", 0):
             self.projectile_type = "standard_projectile"
@@ -49,13 +49,19 @@ class Sentry(types.KX_GameObject):
         
     def aim(self):
 
-        hit = self.rayCast(self.target, self, 0.0, "solid", 0, 1, 0)
-        if hit[0] == self.target:
-            self["cansee"] = True
-            self.alignAxisToVect(hit[2], 0, 1)
+        distance = utils.velocity2speed(self.target.worldPosition - self.worldPosition)
+        
+        if distance < self.range:
+            hit = self.rayCast(self.target, self, 0.0, "solid", 0, 1, 0)
+            
+            if hit[0] == self.target:
+                self["cansee"] = True
+                self.alignAxisToVect(hit[2], 0, 1)
+            else:
+                self["cansee"] = False   
         else:
             self["cansee"] = False
-            
+                
         return self["cansee"]
             
             
