@@ -184,6 +184,7 @@ class Player(types.KX_GameObject):
         self.recouperating = False
         self.movement_speed = 20
         self.light = logic.getCurrentScene().objects["player_light"]
+        self.trail = logic.getCurrentScene().addObject("light_trail")
 
         self.counter = 1
         
@@ -253,9 +254,6 @@ class Player(types.KX_GameObject):
                 self.recouperating = False
                 music.pitch = 1
         
-            
-        
-        #light_trail.main(cont)
 
 def nextlevel():
     dict["current_level"] += 1
@@ -267,6 +265,4 @@ def nextlevel():
 def player_death():
     logic.setTimeScale(.03)
     logic.getCurrentScene().objects[playername].alive = False
-    
-#def main():
     
