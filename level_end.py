@@ -1,10 +1,11 @@
 import bge
 from main import nextlevel
-player = bge.logic.getCurrentScene().objects["player"]
 
 def check_collision(object):
-    if object == player:
+    print(object)
+    if object == bge.logic.getCurrentScene().objects["player"]:
         nextlevel()
+        print("hello?")
 
 def main(cont):
     own = cont.owner

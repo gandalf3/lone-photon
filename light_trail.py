@@ -24,7 +24,7 @@ class LightTrail(types.KX_GameObject):
         for i in range(self.segments):
             self.past_locations.append(scene.objects[self.guide].worldPosition)
 #        for i in range(self.segments/2):
-            self.mesh_segments.append(LightTrailSegment(scene.addObject("trail_segment")))
+#            self.mesh_segments.append(LightTrailSegment(scene.addObject("trail_segment")))
         
         self.tick_count=0
             
@@ -39,7 +39,7 @@ class LightTrail(types.KX_GameObject):
             self.tick_count = 0
             
         
-        for i in range(self.segments):
+        for i in reversed(range(self.segments)):
             #self.mesh_segments[i].worldPosition = self.past_locations[i]
             #self.mesh_segments[i].worldOrientation = (0, 0, 0)
 
@@ -67,7 +67,7 @@ class LightTrail(types.KX_GameObject):
                 bottom_left = e
                 bottom_right = f
                 
-                bge.render.drawLine(self.past_locations[i], self.past_locations[i] - (self.past_locations[i] - self.past_locations[i-1]), (1,1,1))
+                bge.render.drawLine(self.past_locations[i], self.past_locations[i-1], (1,1,1))
                 
                 verts = [top_right, top_left, bottom_left, bottom_right]
                 

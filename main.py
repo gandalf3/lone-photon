@@ -5,16 +5,16 @@ import aud
 import random
 import utils
 
-#sound = aud.Factory.file(logic.expandPath("//sound/Adventure Meme.mp3")).volume(.1).loop(-1)
-#sound = aud.Factory.file(logic.expandPath("//sound/Unwritten Return.mp3")).volume(1).loop(-1)
-sound = aud.Factory.file(logic.expandPath("//sound/Destiny Day.mp3")).volume(1).loop(-1)
+sound = aud.Factory.file(logic.expandPath("//sound/Adventure Meme.mp3")).volume(.1).loop(-1)
+#sound = aud.Factory.file(logic.expandPath("//sound/Unwritten Return.mp3")).volume(.5).loop(-1)
+#sound = aud.Factory.file(logic.expandPath("//sound/Destiny Day.mp3")).volume(.5).loop(-1)
 music = aud.device().play(sound)
 
 dict = logic.globalDict
 playername = "player"
 scene = logic.getCurrentScene()
 
-levels = ['level1', 'level2']
+levels = ['level1', 'level2', 'level3']
 dict["current_level"] = 0
 
 class Sentry(types.KX_GameObject):
@@ -24,13 +24,11 @@ class Sentry(types.KX_GameObject):
         
         self.target = logic.getCurrentScene().objects[playername]
         
-        self.fireRate = .1
-        self.range = 20
+        self.fireRate = self.get("fireRate", .1)
+        self.range = self.get("range", 20)
+        self.projectile_speed = 1 # multiplier for default projectile speed
         
-        if not self.get("projectile", 0):
-            self.projectile_type = "standard_projectile"
-        else:
-            self.projectile_type = self["projectile"]
+        self.projectile_type = self.get("projectile", "standard_projectile")
             
         print(self.name, "using", self.projectile_type)
         
@@ -70,6 +68,7 @@ class Sentry(types.KX_GameObject):
         
         projectile = logic.getCurrentScene().addObject(self.projectile_type, self.firepoint, 0)
         projectile.worldOrientation = self.worldOrientation
+#        projectile.speed = projectile.speed * self.projectile_speed
         
         for part in self.mparts:
             part.playAction(name="sentry", start_frame=1, end_frame=4)
@@ -95,7 +94,7 @@ class Projectile(types.KX_GameObject):
         
         self.sound = sound
 
-        self.speed = -30
+        self.speed = self.get("speed", 30)*-1
         self.homing_factor = 0
         
         self.collisionCallbacks.append(self.on_collision)
