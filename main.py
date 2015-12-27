@@ -5,8 +5,8 @@ import aud
 import random
 import utils
 
-sound = aud.Factory.file(logic.expandPath("//sound/Adventure Meme.mp3")).volume(.1).loop(-1)
-#sound = aud.Factory.file(logic.expandPath("//sound/Unwritten Return.mp3")).volume(.5).loop(-1)
+#sound = aud.Factory.file(logic.expandPath("//sound/Adventure Meme.mp3")).volume(.1).loop(-1)
+sound = aud.Factory.file(logic.expandPath("//sound/Unwritten Return.mp3")).volume(.5).loop(-1)
 #sound = aud.Factory.file(logic.expandPath("//sound/Destiny Day.mp3")).volume(.5).loop(-1)
 music = aud.device().play(sound)
 
