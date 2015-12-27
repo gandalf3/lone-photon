@@ -1,4 +1,6 @@
-BGMC 19 game
+## BGMC 19 game
+
+Demo video [here](https://youtu.be/Cj9Wp-PHbCw)
 
 Code a big mess atm, trying to get it ready in time.
 
