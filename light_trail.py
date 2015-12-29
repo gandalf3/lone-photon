@@ -42,8 +42,6 @@ class LightTrail(types.KX_GameObject):
                     self.vertlist.append({"XYZ": vertex.XYZ.copy(), "index": v_index})
                         
         self.vertlist.sort(key=sort_verts, reverse=True)
-        for v in self.vertlist:
-            print(v['index'], v['XYZ'])
 
         
         self.tick_count=0
@@ -72,15 +70,10 @@ class LightTrail(types.KX_GameObject):
             target_thickness = utils.clamp((i-1)/self.segments * self.thickness_factor, .4, 1)
 
             
-            tan = self.past_locations[i] - self.past_locations[i-1] if i-1>=0 else self.trailmesh.worldPosition                
+            tan = self.past_locations[i] - self.past_locations[i-1] if i-1>=0 else self.trailmesh.worldPosition
             target_tan = self.past_locations[i-1 if i-1>=0 else 0] - self.past_locations[i-2 if i-2>=0 else 0]
             
-            a = tan.lerp(target_tan, self.tick_count * logic.getTimeScale())
-
-
-            print(a)
-
-                
+            a = tan.lerp(target_tan, self.tick_count * logic.getTimeScale())                
             b = Vector((0, 0, 0))
             
             dir = b - a
