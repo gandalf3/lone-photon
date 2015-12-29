@@ -29,3 +29,9 @@ def map_range(value, from_min=0, from_max=1, to_min=0, to_max=1):
     
     return ((to_max-to_min)*(value - from_min) / (from_max - from_min)) + to_min
 
+def lerp(value1, value2, fac):
+    """
+    linear interpolation
+    """
+    
+    return value1 * (1-fac) + value2 * fac
