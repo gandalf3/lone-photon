@@ -26,6 +26,8 @@ class Sentry(types.KX_GameObject):
         
         self.fireRate = self.get("fireRate", .1)
         self.range = self.get("range", 20)
+        self.leading_factor = self.get("leading_factor", 0)
+        
         self.projectile_speed = 1 # multiplier for default projectile speed
         
         self.projectile_type = self.get("projectile", "standard_projectile")
@@ -54,7 +56,10 @@ class Sentry(types.KX_GameObject):
             
             if hit[0] == self.target:
                 self["cansee"] = True
-                self.alignAxisToVect(hit[2], 0, 1)
+                
+                leading_vec = mathutils.Vector(self.worldPosition.lerp(self.target.worldPosition + self.target.getLinearVelocity() * self.leading_factor, 100))
+                
+                self.alignAxisToVect(-leading_vec, 0, 1)
             else:
                 self["cansee"] = False   
         else:
@@ -133,7 +138,7 @@ class Projectile(types.KX_GameObject):
             vectsplosion = logic.getCurrentScene().addObject("vectsplosion")
             vectsplosion["point"] = point
             vectsplosion["direction"] = r
-            vectsplosion["color"] = (1, 0, 0)
+            vectsplosion["color"] = (1, .5, .5)
             
             if object == logic.getCurrentScene().objects[playername]:
                 player_death()
@@ -147,6 +152,16 @@ class Projectile(types.KX_GameObject):
 
         if self.sound_handle:
             self.sound_handle.pitch = utils.map_range(logic.getTimeScale() + utils.map_range(random.random(), to_min=-.1, to_max=.1), .05, 1, .2, 1)
+            
+
+#class Door(types.KX_GameObject):
+#    
+#    def __init__(self, own):
+#        
+#        self.
+
+
+
 
 class Vectsplosion(types.KX_GameObject):
     
