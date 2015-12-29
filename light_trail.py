@@ -7,7 +7,7 @@ import utils
 def sort_verts(k):
     
     if k['XYZ'][0] < 0:
-        return k['XYZ'][1]+.001
+        return k['XYZ'][1]+.0001
     else:
        return k['XYZ'][1]
     
@@ -18,7 +18,7 @@ class LightTrail(types.KX_GameObject):
 
         self.guide = "player" # object to follow
         
-        self.segment_length = 0 # number of logic ticks to wait between reading parent position
+        self.segment_length = 1 # number of logic ticks to wait between reading parent position
         self.segments = 30
         
         self.age = 0
@@ -39,15 +39,17 @@ class LightTrail(types.KX_GameObject):
                 for v_index in range(mesh.getVertexArrayLength(m_index)):
                     vertex = mesh.getVertex(m_index, v_index)
                     
-                    self.vertlist.append({"XYZ": vertex.XYZ, "index": v_index})
+                    print(m_index, v_index, mesh.getVertex(m_index, v_index).getXYZ())
+                    self.vertlist.append({"XYZ": vertex.XYZ.copy(), "index": v_index})
                         
         self.vertlist.sort(key=sort_verts, reverse=True)
-        for v in self.vertlist:
-            print(v['index'], v['XYZ'])
+#        for v in self.vertlist:
+#            print(v['index'], v['XYZ'])
 
         
         self.tick_count=0
         self.verts = collections.deque(maxlen=self.segments*2)
+        
             
     def main(self):
         
@@ -66,12 +68,13 @@ class LightTrail(types.KX_GameObject):
 
             
 #                [(.1,.1,0), (-.1,.1,0), (-.1,-.1,0), (.1,-.1,0)]
-            thickness = i/self.segments * .5
+            thickness = i/self.segments * .3
 
             if i-1 > 0:
-                a = self.past_locations[i] - self.past_locations[i-1]
+                a = (self.past_locations[i] - self.past_locations[i-1]).lerp(self.past_locations[i] - self.past_locations[i], self.tick_count*logic.getTimeScale())
             else:
                 a = self.past_locations[i] - self.trailmesh.worldPosition
+                
             b = Vector((0, 0, 0))
             
             dir = b - a
@@ -83,18 +86,14 @@ class LightTrail(types.KX_GameObject):
             c = b - perp * (thickness/2)
             d = b + perp * (thickness/2)
             
-#            e = a + perp * (thickness/2)
-#            f = a - perp * (thickness/2)
-            
             left = self.past_locations[i] - self.trailmesh.worldPosition + d
             right = self.past_locations[i] - self.trailmesh.worldPosition + c
 
 #            left = d
 #            right = c
             
-            if i%2:
-                self.verts.append(right)
-                self.verts.append(left)
+            self.verts.append(right)
+            self.verts.append(left)
 #            self.verts.append(d)
 #            self.verts.append(c)
             #print("count", i, len(self.verts))
@@ -111,10 +110,14 @@ class LightTrail(types.KX_GameObject):
                     vertex = mesh.getVertex(m_index, self.vertlist[v_index]['index'])
                     #vertex2 = mesh.getVertex(m_index, v_index)
                     
-                    if v_index <= len(self.verts):
+                    if v_index < len(self.verts):
 #                        print(v_index, verts[v_index], self.vertlist[v_index]['index'], vertex.XYZ)
 #                       print(v_index, self.vertlist[v_index+2]['index'])
 #                        vertex.XYZ = self.verts[self.vertlist[v_index]['index']]
+#                        print(v_index, len(self.verts))
+#                        if v_index == 29:
+#                            print(self.verts[v_index])
+#                        print(self.verts[v_index])
                         vertex.XYZ = self.verts[v_index]
 #                        print(self.verts[v_index], vertex.XYZ)
 #                        vertex.setNormal(Vector((0,0,-1)))
@@ -123,12 +126,11 @@ class LightTrail(types.KX_GameObject):
 #                       vertex2.XYZ = self.verts[self.vertlist[v_index+2]['index']]
 #                        print(self.verts[self.vertlist[v_index]['index']], self.verts[self.vertlist[v_index+1]['index']])
                         #if v_index < 4:
-                        bge.render.drawLine((0,0,0), vertex.XYZ, (1,1,1))
 
             
-        bge.render.drawLine(self.past_locations[1], \
-            Vector(self.past_locations[1]).lerp(Vector(self.past_locations[0]), \
-            1 - (self.tick_count*logic.getTimeScale()/self.segment_length)), (.8,.9,1))
+#        bge.render.drawLine(self.past_locations[1], \
+#            Vector(self.past_locations[1]).lerp(Vector(self.past_locations[0]), \
+#            1 - (self.tick_count*logic.getTimeScale()/self.segment_length)), (.8,.9,1))
             
         self.tick_count += 1
         
