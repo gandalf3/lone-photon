@@ -1,3 +1,5 @@
+import math
+
 """
 Basic utility functions
 """
@@ -19,7 +21,7 @@ def distance(point1, point2):
     Distance on the X/Y plane between two points
     """
     
-    return sqrt((point1.x - point2.x)**2 + (point1.y - point2.y))
+    return math.sqrt((point1.x - point2.x)**2 + (point1.y - point2.y))
 
 def map_range(value, from_min=0, from_max=1, to_min=0, to_max=1):
     """

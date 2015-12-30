@@ -6,15 +6,31 @@ import random
 import utils
 
 #sound = aud.Factory.file(logic.expandPath("//sound/Adventure Meme.mp3")).volume(.1).loop(-1)
-sound = aud.Factory.file(logic.expandPath("//sound/Unwritten Return.mp3")).volume(.5).loop(-1)
-#sound = aud.Factory.file(logic.expandPath("//sound/Destiny Day.mp3")).volume(.5).loop(-1)
+#sound = aud.Factory.file(logic.expandPath("//sound/Unwritten Return.mp3")).volume(.5).loop(-1)
+sound = aud.Factory.file(logic.expandPath("//sound/Destiny Day.mp3")).volume(.5).loop(-1)
 music = aud.device().play(sound)
 
 dict = logic.globalDict
 playername = "player"
 scene = logic.getCurrentScene()
 
-levels = ['level1', 'level2', 'level3', 'level4', 'level5']
+levels = [{"name": 'level1',
+           "music_path": '//sound/Destiny Day.mp3',
+           "volume": .5},
+          {"name": 'level2',
+           "music_path": '//sound/Destiny Day.mp3',
+           "volume": .5},
+          {"name": 'level3',
+           "music_path": '//sound/Unwritten Return.mp3',
+           "volume": .5},
+          {"name": 'level4',
+           "music_path": '//sound/Unwritten Return.mp3',
+           "volume": .5},
+          {"name": 'level5',
+           "music_path": '//sound/Adventure Meme.mp3',
+           "volume": .1},
+          ]
+           
 dict["current_level"] = 0
 
 class Sentry(types.KX_GameObject):
@@ -144,7 +160,6 @@ class Projectile(types.KX_GameObject):
                 player_death()
             else:
                 self.endObject()
-            
         
     def main(self):
         
@@ -324,11 +339,16 @@ class Player(types.KX_GameObject):
         
 
 def nextlevel():
+    global music
     dict["current_level"] += 1
     lvl = dict["current_level"]
     print("going to level", lvl)
     
-    logic.getCurrentScene().replace(levels[lvl])
+    logic.getCurrentScene().replace(levels[lvl]['name'])
+    music_factory = aud.Factory.file(logic.expandPath(levels[lvl]['music_path'])).volume(levels[lvl]['volume']).loop(-1)
+    if levels[lvl]['music_path'] != levels[lvl-1]['music_path']:
+        music.stop()
+        music = aud.device().play(music_factory)
     
 def player_death():
     logic.setTimeScale(.03)
