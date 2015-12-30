@@ -14,7 +14,7 @@ dict = logic.globalDict
 playername = "player"
 scene = logic.getCurrentScene()
 
-levels = ['level1', 'level2', 'level3', 'level4']
+levels = ['level1', 'level2', 'level3', 'level4', 'level5']
 dict["current_level"] = 0
 
 class Sentry(types.KX_GameObject):
