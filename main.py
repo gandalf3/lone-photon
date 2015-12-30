@@ -14,7 +14,7 @@ dict = logic.globalDict
 playername = "player"
 scene = logic.getCurrentScene()
 
-levels = ['level1', 'level2', 'level3']
+levels = ['level1', 'level2', 'level3', 'level4']
 dict["current_level"] = 0
 
 class Sentry(types.KX_GameObject):
@@ -154,12 +154,66 @@ class Projectile(types.KX_GameObject):
             self.sound_handle.pitch = utils.map_range(logic.getTimeScale() + utils.map_range(random.random(), to_min=-.1, to_max=.1), .05, 1, .2, 1)
             
 
-#class Door(types.KX_GameObject):
-#    
-#    def __init__(self, own):
-#        
-#        self.
+class Door(types.KX_GameObject):
+    
+    def __init__(self, own):
+        
+        self.total_time = 0
+        self.cycle_time = 0
+        self.open_duration = self.get("open_duration", 100)
+        self.close_duration = self.get("close_duration", 100)
+        self.transition_duration = self.get("transition_duration", 50)
 
+        self.doorstate = "open"
+        
+        self.parts = []
+        self.consts = []
+        for o in self.children:
+            if "constant" not in o:                
+                self.parts.append(o)
+            else:
+                self.consts.append(o)
+        
+    def main(self):
+        
+                
+        if self.doorstate == "open":
+            if self.cycle_time > self.open_duration:
+                self.doorstate = "closing"
+                self.cycle_time = 0
+            
+                
+        elif self.doorstate == "closed":
+            if self.cycle_time > self.close_duration:
+                self.doorstate = "opening"
+                self.cycle_time = 0
+                
+        elif self.doorstate == "opening":
+            time = 1-(self.cycle_time/self.transition_duration) 
+            for o in self.parts:
+                o['anim_time'] = time
+                
+            if self.cycle_time > self.transition_duration:
+                self.doorstate = "open"
+                for o in self.parts:
+                    o['anim_time'] = 0
+                        
+        elif self.doorstate == "closing":
+            time = self.cycle_time/self.transition_duration
+            for o in self.parts:
+                o['anim_time'] = time
+                
+            if self.cycle_time > self.transition_duration:
+                self.doorstate = "closed"
+                for o in self.parts:
+                    o['anim_time'] = 1
+
+                
+        for o in self.consts:
+            o['anim_time'] = self.total_time
+                
+        self.cycle_time += 1 * logic.getTimeScale()
+        self.total_time += 1 * logic.getTimeScale()
 
 
 
