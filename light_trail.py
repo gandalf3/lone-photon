@@ -14,14 +14,15 @@ def sort_verts(k):
 
 class LightTrail(types.KX_GameObject):
     
-    def __init__(self, own, guide=False, length=30):
+    def __init__(self, own, guide=False, length=30, use_mesh=True):
         scene = logic.getCurrentScene()
         
         if not guide:
             self.guide = scene.objects["player"] # object to follow
         else:
             self.guide = guide
-        self.use_mesh = True
+
+        self.use_mesh = use_mesh
         self.segment_length = 1 # number of logic ticks to wait between reading parent position
         
         if not length:
@@ -40,15 +41,16 @@ class LightTrail(types.KX_GameObject):
         self.vertlist = []
         
         self.clear()
-            
-        for mesh in self.trailmesh.meshes:
-            for m_index in range(len(mesh.materials)):
-                for v_index in range(mesh.getVertexArrayLength(m_index)):
-                    vertex = mesh.getVertex(m_index, v_index)
-#                    print(v_index)
-                    self.vertlist.append({"XYZ": vertex.XYZ.copy(), "index": v_index})
-                        
-        self.vertlist.sort(key=sort_verts, reverse=True)
+        
+        if self.use_mesh:
+            for mesh in self.trailmesh.meshes:
+                for m_index in range(len(mesh.materials)):
+                    for v_index in range(mesh.getVertexArrayLength(m_index)):
+                        vertex = mesh.getVertex(m_index, v_index)
+    #                    print(v_index)
+                        self.vertlist.append({"XYZ": vertex.XYZ.copy(), "index": v_index})
+                            
+            self.vertlist.sort(key=sort_verts, reverse=True)
 
         
         self.tick_count=0
@@ -78,7 +80,7 @@ class LightTrail(types.KX_GameObject):
             target_thickness = utils.clamp((i-1)/self.segments * self.thickness_factor, .1, 1)
 
             
-            tan = self.past_locations[i] - self.past_locations[i-1] if i-1>=0 else self.trailmesh.worldPosition
+            tan = self.past_locations[i] - self.past_locations[i-1] if i-1>=0 else self.guide.worldPosition
             target_tan = self.past_locations[i-1 if i-1>=0 else 0] - self.past_locations[i-2 if i-2>=0 else 0]
             
             a = tan.lerp(target_tan, self.tick_count * logic.getTimeScale())                
